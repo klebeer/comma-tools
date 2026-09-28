@@ -78,6 +78,7 @@ There is no pytest on the device.
 | `mapd_probe.py` | hands mapd one logged position and prints what it publishes |
 | `mapd_eval.py` ... `mapd_eval4.py` | map curvature ahead vs what the car drove; fixed vs learned limits |
 | `match_events.py` | what mapd reported ahead of specific curves (live log or replay) |
+| `curve_shadow_eval.py` | judges the shadow curve warnings: real (torque cap, takeover, runs wide) or false, and misses |
 
 `mapd_eval3.py` and `mapd_eval4.py` import `mapd_eval2.py`: copy all three to `/data`.
 
