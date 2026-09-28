@@ -43,6 +43,7 @@ There is no pytest on the device.
 | Script | Measures |
 |---|---|
 | `lowspeed.py` | achieved/requested curvature by speed and curve tightness, and whether torque was capped |
+| `err_source.py` | under-tracking in curves split by cause: EPS ceiling, slew limit, EPS delivery, controller room |
 | `pidterms.py`, `pidterms2.py` | torque controller terms in gentle curves; tracking vs roll compensation |
 | `satsim.py` | replays the lateral saturation check under different rules |
 | `lagd_offline.py` | runs lagd's own estimator offline with lower speed floors |
