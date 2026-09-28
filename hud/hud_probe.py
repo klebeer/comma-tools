@@ -3,6 +3,11 @@
 Runs only when /data/hud_probe.json exists and the car is in park at standstill. Any other gear or
 motion aborts it. Deletes the trigger when done or aborted. Each step is logged with
 time.monotonic() so it joins the rlog (logMonoTime) and a phone video of the HUD.
+
+Not run directly: carcontroller_probe.patch imports it into opendbc's Mazda carcontroller, which
+calls HudProbe.overrides(CS) every frame and, while it returns a dict, sends make_msg() instead of
+the normal CAM_LANEINFO alert command. Each step holds its fields for ON_S, then GAP_S of
+baseline. Progress goes to /data/hud_probe.log.
 """
 import os
 import time

@@ -28,66 +28,66 @@ There is no pytest on the device.
 
 | Script | Measures |
 |---|---|
-| `verify_route.py` | card and panda state, dead processes, the CRZ_CTRL relay on the wire, events |
-| `lat_beep.py` | tracking error by speed band, learned torque params, sounds, CAN warning bits |
-| `lane.py` | lane centre offset and lane line confidence |
-| `tail5.py` | the last N seconds in 10 s blocks: speed, lines, edges, camera intent, road name |
-| `curve.py` | timeline of a window: desired vs actual curvature, torque, lane lines |
-| `takeover.py` | classifies every driver takeover by context (lane change, tight turn, light touch...) |
-| `fcw.py` | stock collision warning (`stockFcw`) episodes |
-| `gps_extract.py` | GPS track to CSV with speed, accuracy and mapd road names |
-| `models.py` | driving model catalogue on the device (big vs regular) |
+| `post_drive_check.py` | card and panda state, dead processes, the CRZ_CTRL relay on the wire, events |
+| `drive_report.py` | tracking error by speed band, learned torque params, sounds, CAN warning bits |
+| `lane_center_and_confidence.py` | lane centre offset and lane line confidence |
+| `last_seconds.py` | the last N seconds in 10 s blocks: speed, lines, edges, camera intent, road name |
+| `curve_timeline.py` | timeline of a window: desired vs actual curvature, torque, lane lines |
+| `classify_takeovers.py` | classifies every driver takeover by context (lane change, tight turn, light touch...) |
+| `stock_fcw_episodes.py` | stock collision warning (`stockFcw`) episodes |
+| `export_gps_track.py` | GPS track to CSV with speed, accuracy and mapd road names |
+| `list_driving_models.py` | driving model catalogue on the device (big vs regular) |
 
 ### lateral/ — steering precision
 
 | Script | Measures |
 |---|---|
-| `lowspeed.py` | achieved/requested curvature by speed and curve tightness, and whether torque was capped |
-| `err_source.py` | under-tracking in curves split by cause: EPS ceiling, slew limit, EPS delivery, controller room |
-| `pidterms.py`, `pidterms2.py` | torque controller terms in gentle curves; tracking vs roll compensation |
-| `satsim.py` | replays the lateral saturation check under different rules |
-| `lagd_offline.py` | runs lagd's own estimator offline with lower speed floors |
-| `lane_vs_cam.py` | model lane position vs the stock camera's steering intent |
-| `edges.py`, `wide.py` | position between the road edges on wide streets |
-| `ctxoff.py` | how often the right line is missing and the room to the curb |
+| `curve_tracking_by_speed.py` | achieved/requested curvature by speed and curve tightness, and whether torque was capped |
+| `curve_error_causes.py` | under-tracking in curves split by cause: EPS ceiling, slew limit, EPS delivery, controller room |
+| `controller_terms_gentle_curves.py`, `controller_terms_by_turn_direction.py` | torque controller terms in gentle curves; tracking vs roll compensation |
+| `saturation_check_replay.py` | replays the lateral saturation check under different rules |
+| `steering_delay_offline.py` | runs lagd's own estimator offline with lower speed floors |
+| `model_vs_stock_camera.py` | model lane position vs the stock camera's steering intent |
+| `position_between_road_edges.py`, `wide_street_timeline.py` | position between the road edges on wide streets |
+| `missing_right_line.py` | how often the right line is missing and the room to the curb |
 
 ### can/ — signal discovery
 
 | Script | Measures |
 |---|---|
-| `bitscan.py` | per-bit activity of every CAN frame in a route, to JSON |
-| `bitdiff.py` | diffs two `bitscan.py` outputs, named with the DBC (runs on the Mac) |
-| `window.py`, `win1.py` | bit edges inside a time window, with driving state |
-| `corr.py` | ranks bits by how well their edges line up with given event times |
-| `b21c.py` | CRZ_CTRL (0x21C) bit 39 intervals vs beep times |
-| `f4fa.py` | 0x4FA field timeline with lane context |
-| `eps_deliv.py` | commanded torque vs EPS motor torque and LKAS_BLOCK |
-| `camgap.py` | camera CRZ_CTRL rate and largest gaps |
+| `scan_bit_activity.py` | per-bit activity of every CAN frame in a route, to JSON |
+| `compare_bit_scans.py` | diffs two `scan_bit_activity.py` outputs, named with the DBC (runs on the Mac) |
+| `bit_edges_in_window.py`, `bit_edges_around_beep.py` | bit edges inside a time window, with driving state |
+| `rank_bits_by_event_times.py` | ranks bits by how well their edges line up with given event times |
+| `crz_ctrl_bit39_vs_beeps.py` | CRZ_CTRL (0x21C) bit 39 intervals vs beep times |
+| `msg_4fa_timeline.py` | 0x4FA field timeline with lane context |
+| `eps_torque_delivery.py` | commanded torque vs EPS motor torque and LKAS_BLOCK |
+| `crz_ctrl_rate_and_gaps.py` | camera CRZ_CTRL rate and largest gaps |
 
 ### audio/
 
 | Script | Measures |
 |---|---|
-| `beeps.py` | route microphone audio to WAV and tonal events (needs `RecordAudio` on) |
+| `find_beeps.py` | route microphone audio to WAV and tonal events (needs `RecordAudio` on) |
 
 ### mapd/ — map data
 
 | Script | Measures |
 |---|---|
-| `mapd_replay.sh`, `mapd_replay_all.sh` | pause `mapd_manager`, replay a route's positions into mapd, resume |
-| `mapd_replay.py` | the replay itself, one JSON line per position |
-| `mapd_probe.py` | hands mapd one logged position and prints what it publishes |
-| `mapd_eval.py` ... `mapd_eval4.py` | map curvature ahead vs what the car drove; fixed vs learned limits |
-| `match_events.py` | what mapd reported ahead of specific curves (live log or replay) |
-| `curve_shadow_eval.py` | judges the shadow curve warnings: real (torque cap, takeover, runs wide) or false, and misses |
+| `replay_route_into_mapd.sh`, `replay_routes_into_mapd.sh` | pause `mapd_manager`, replay a route's positions into mapd, resume |
+| `replay_route_into_mapd.py` | the replay itself, one JSON line per position |
+| `probe_one_position.py` | hands mapd one logged position and prints what it publishes |
+| `map_vs_driven_curvature.py` ... `fixed_vs_learned_limit.py` | map curvature ahead vs what the car drove; fixed vs learned limits |
+| `map_ahead_of_curves.py` | what mapd reported ahead of specific curves (live log or replay) |
+| `evaluate_curve_warning.py` | judges the shadow curve warnings: real (torque cap, takeover, runs wide) or false, and misses |
 
-`mapd_eval3.py` and `mapd_eval4.py` import `mapd_eval2.py`: copy all three to `/data`.
+`map_warning_false_alarms.py` and `fixed_vs_learned_limit.py` import `map_curve_warning_eval.py`: copy all three to `/data`.
 
 ### relay/
 
 | Script | Measures |
 |---|---|
-| `replay_relay.py` | feeds a logged route through the CRZ_CTRL capture and relay builder |
+| `replay_crz_ctrl_relay.py` | feeds a logged route through the CRZ_CTRL capture and relay builder |
 
 ### hud/ — parked HUD discovery (not installed)
 
