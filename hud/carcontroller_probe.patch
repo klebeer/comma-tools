@@ -1,0 +1,31 @@
+--- opendbc/car/mazda/carcontroller.py	2026-09-27 12:48:15
++++ opendbc/car/mazda/carcontroller.py	2026-09-27 19:38:25
+@@ -7,6 +7,7 @@
+ from opendbc.car.lateral import apply_driver_steer_torque_limits
+ from opendbc.car.interfaces import CarControllerBase
+ from opendbc.car.mazda import mazdacan
++from opendbc.car.mazda import hud_probe
+ from opendbc.car.mazda.longitudinal import BREAKAWAY_FRAMES, AdvertisedLead, StandstillHold
+ from opendbc.car.mazda.radar_session import RadarSessionManager, RadarSessionState
+ from opendbc.car.mazda.values import CarControllerParams, Buttons, MazdaFlags
+@@ -35,6 +36,7 @@
+     self.steer_to_zero = bool(CP.flags & MazdaFlags.STEER_TO_ZERO_EPS)
+     self.g46l = bool(CP.flags & MazdaFlags.G46L_RADAR)
+     self.cam_crz_ctrl_frames_sent = 0
++    self.hud_probe = hud_probe.HudProbe()
+     self.apply_torque_last = 0
+     self.driver_torque_samples: deque[float] = deque(maxlen=self.params.STEER_DRIVER_SAMPLES if self.eps_2022 else 1)
+     self.packer = CANPacker(dbc_names[Bus.pt])
+@@ -134,7 +136,11 @@
+       steer_required = CC.hudControl.visualAlert == VisualAlert.steerRequired
+       # TODO: find a way to silence audible warnings so we can add more hud alerts
+       steer_required = steer_required and CS.lkas_allowed_speed
+-      can_sends.append(mazdacan.create_alert_command(self.packer, CS.cam_laneinfo, ldw, steer_required))
++      probe = self.hud_probe.overrides(CS)
++      if probe is not None:
++        can_sends.append(hud_probe.make_msg(self.packer, CS.cam_laneinfo, probe))
++      else:
++        can_sends.append(mazdacan.create_alert_command(self.packer, CS.cam_laneinfo, ldw, steer_required))
+ 
+     # send steering command
+     can_sends.append(mazdacan.create_steering_control(self.packer, self.CP,
