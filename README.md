@@ -50,6 +50,10 @@ There is no pytest on the device.
 | `model_vs_stock_camera.py` | model lane position vs the stock camera's steering intent |
 | `position_between_road_edges.py`, `wide_street_timeline.py` | position between the road edges on wide streets |
 | `missing_right_line.py` | how often the right line is missing and the room to the curb |
+| `position_by_oneway.py` | where the car rides on two-way streets vs one-way carriageways, from the map's oneWay |
+| `wide_road_shift.py` | how far right the car would need to move on wide roads, from the road edges alone |
+| `steering_touch_profile.py` | driver torque of resting touches vs real maneuvers, to place the steering-pressed threshold |
+| `nnlc_offline_eval.py` | whether an NNLC model predicts this car's steering torque better than a straight line |
 
 ### can/ — signal discovery
 
@@ -80,6 +84,10 @@ There is no pytest on the device.
 | `map_vs_driven_curvature.py` ... `fixed_vs_learned_limit.py` | map curvature ahead vs what the car drove; fixed vs learned limits |
 | `map_ahead_of_curves.py` | what mapd reported ahead of specific curves (live log or replay) |
 | `evaluate_curve_warning.py` | judges the shadow curve warnings: real (torque cap, takeover, runs wide) or false, and misses |
+| `classify_missed_curves.py` | why each hard moment had no warning: intersection, gated, radius, no map curve |
+| `estimate_curve_rule.py` | replays the fixed-radius rule against a speed-aware one, and the car's held radius per speed |
+| `known_hard_curves.py` | hard curves learned from the driver's own drives, scored leave-one-out; `--write` feeds curve_shadow |
+| `turn_memory.py` | predicts the next turn from the driver's own GPS history, scored leave-one-out |
 
 `map_warning_false_alarms.py` and `fixed_vs_learned_limit.py` import `map_curve_warning_eval.py`: copy all three to `/data`.
 
@@ -95,6 +103,10 @@ There is no pytest on the device.
 and `carcontroller_probe.patch` hooks it into opendbc's Mazda carcontroller. It runs only when
 `/data/hud_probe.json` exists, the car is in park at standstill and lateral is armed with ON;
 leaving park aborts it and it deletes the trigger when done. Remove the patch after the test.
+
+`tsr_probe.py` does the same for CAM_TRAFFIC_SIGNS (0x35F), each step drawing its own speed value so
+a sign that appears identifies the bits that drew it. It needs a probe panda firmware that accepts
+those fields while stopped; reflash the production firmware afterwards.
 
 ## Findings these tools produced
 
