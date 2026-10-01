@@ -10,7 +10,7 @@ Warnings come from the curve_shadow logs in /data/media/0/curve_shadow.
 
 Usage: python evaluate_curve_warning.py <route_id> ...
 """
-import glob, json, os, sys, warnings
+import calendar, glob, json, os, sys, time, warnings
 warnings.filterwarnings("ignore")
 from openpilot.tools.lib.logreader import LogReader
 
@@ -19,23 +19,30 @@ SHADOW = "/data/media/0/curve_shadow/*.jsonl"
 OUTCOME_S, LEAD_S = 20.0, 15.0
 TIGHT_K = 1 / 60.0   # 60 m radius
 
+# The monotonic clock restarts at every boot, so mono_ns alone can land a warning in another drive.
+# Each shadow file is also tied to its drive by the wall-clock start in its name (device clock, UTC).
 warns = []
 for f in glob.glob(SHADOW):
+  started = calendar.timegm(time.strptime(os.path.basename(f)[:20], "%Y-%m-%d--%H-%M-%S"))
   for line in open(f):
     try:
-      warns.append(json.loads(line))
+      w = json.loads(line)
     except ValueError:
-      pass
+      continue
+    w["file_start"] = started
+    warns.append(w)
 
 for prefix in sys.argv[1:]:
   segs = sorted((d for d in os.listdir(BASE) if "--" in d and d.split("--")[1] == prefix), key=lambda n: int(n.rsplit("--", 1)[1]))
   if not segs:
     continue
-  first = last = None; hard = []; st = {"lat": False, "v": 0.0}; prev = 0.0
+  first = last = None; wall0 = None; hard = []; st = {"lat": False, "v": 0.0}; prev = 0.0
   for s in segs:
     for m in LogReader(os.path.join(BASE, s, "rlog.zst")):
       w = m.which(); t = m.logMonoTime
       first = first or t; last = t
+      if w == "initData" and wall0 is None:
+        wall0 = m.initData.wallTimeNanos / 1e9
       if w == "carState":
         st["v"] = m.carState.vEgo * 3.6
         if m.carState.steeringPressed and st["lat"]:
@@ -51,7 +58,8 @@ for prefix in sys.argv[1:]:
         prev = o
         if abs(cs.desiredCurvature) > TIGHT_K and abs(cs.curvature) < 0.75 * abs(cs.desiredCurvature):
           hard.append((t, "runs wide"))
-  mine = [w for w in warns if first <= w["mono_ns"] <= last]
+  wall1 = wall0 + (last - first) / 1e9
+  mine = [w for w in warns if first <= w["mono_ns"] <= last and wall0 - 120 <= w["file_start"] <= wall1]
   print(f"{prefix}: {len(mine)} would-be warnings")
   for w in mine:
     after = sorted({k for t, k in hard if w["mono_ns"] <= t <= w["mono_ns"] + OUTCOME_S * 1e9})
