@@ -22,6 +22,40 @@ records in `/data/media/0/mapd_log`. Long runs: start them with `nohup ... </dev
 with `ps aux | grep -c "[s]cript.py"` (a bare `pgrep -f` inside `bash -c` matches itself).
 There is no pytest on the device.
 
+## Running on the Mac
+
+Copy the route logs and shadow logs, once and then after each drive (only new files transfer).
+The script ends by exporting the GPS track of each new drive to `~/.comma/tracks`, having
+comma-nav rebuild its route bundle from them, and putting that bundle on the device at
+`/data/nav/route_bundle.json`, where curve_shadow reads it at the start of the next drive:
+
+```bash
+./sync_from_device.sh [device-ip]
+```
+
+They land in `~/.comma/media/0`, laid out as on the device. The copy runs only with the car off:
+it does not start, and stops midway, if the device goes onroad or drops off the network.
+
+One-time environment, then run from this directory:
+
+```bash
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python pycapnp==2.1.0 zstandard numpy tqdm requests pyzmq
+PYTHONPATH=~/Projects/zoompilot-cx5:~/Projects/zoompilot-cx5/openpilot:~/Projects/opendbc-cx5 \
+  .venv/bin/python mapd/turn_memory.py <route_id> ...
+```
+
+A script runs in both places when it takes the log directory from `Paths.log_root()`
+(`mapd/turn_memory.py` and `mapd/known_hard_curves.py` do). The others still name the device path
+and run only there.
+
+`mapd/route_plan_eval.py` also needs the route planner and its tiles:
+
+```bash
+uv pip install --python .venv/bin/python -e ~/Projects/comma-nav
+(cd ~/Projects/comma-nav && uv run comma-nav setup)
+```
+
 ## Scripts
 
 ### route/ — one-drive reports
@@ -88,6 +122,10 @@ There is no pytest on the device.
 | `estimate_curve_rule.py` | replays the fixed-radius rule against a speed-aware one, and the car's held radius per speed |
 | `known_hard_curves.py` | hard curves learned from the driver's own drives, scored leave-one-out; `--write` feeds curve_shadow |
 | `turn_memory.py` | predicts the next turn from the driver's own GPS history, scored leave-one-out |
+| `route_plan_eval.py` | replays each drive through comma-nav's route follower against a route planned for it: turns announced, false alarms, share of the drive on the planned route |
+| `export_tracks.py` | writes each drive's GPS track to `~/.comma/tracks`, for tools that do not read rlogs |
+| `replay_bundle.py` | replays recorded drives through a route bundle file as the device would follow it: what it would announce, and whether a turn followed |
+| `route_hard_moments.py` | replays the map, learned and route rules of the curve warning over each drive and scores them against its hard steering moments, alone and combined |
 
 `map_warning_false_alarms.py` and `fixed_vs_learned_limit.py` import `map_curve_warning_eval.py`: copy all three to `/data`.
 

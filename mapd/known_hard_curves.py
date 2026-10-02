@@ -20,10 +20,11 @@ import calendar, glob, json, math, os, sys, time, warnings
 from collections import defaultdict
 warnings.filterwarnings("ignore")
 import numpy as np
+from openpilot.common.hardware.hw import Paths
 from openpilot.tools.lib.logreader import LogReader
 
-BASE = "/data/media/0/realdata"
-SHADOW = "/data/media/0/curve_shadow/*.jsonl"
+BASE = Paths.log_root()
+SHADOW = os.path.join(os.path.dirname(BASE.rstrip("/")), "curve_shadow", "*.jsonl")
 CEIL = ([8.0, 8.5, 9.4, 10.3, 11.2, 12.1, 13.0, 13.9, 14.5], [1148, 1132, 1092, 1048, 1012, 920, 808, 676, 620])
 MIN_KPH, CURVE_K, GROUP_S = 10.0, 1 / 150.0, 10.0
 CLUSTER_M, MIN_ROUTES, WARN_M, LEAD_S = 25.0, 2, 120.0, 15.0
@@ -155,4 +156,5 @@ def main():
         f"map rule {tot['map']} ({100 * tot['map'] / m:.0f}%, {tot['warns']} warnings)")
 
 
-main()
+if __name__ == "__main__":
+  main()

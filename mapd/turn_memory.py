@@ -18,9 +18,10 @@ import math, os, sys, warnings
 from collections import defaultdict
 warnings.filterwarnings("ignore")
 import numpy as np
+from openpilot.common.hardware.hw import Paths
 from openpilot.tools.lib.logreader import LogReader
 
-BASE = "/data/media/0/realdata"
+BASE = Paths.log_root()
 MIN_KPH = 3.0
 TURN_DEG, TURN_WINDOW_M = 45.0, 60.0
 STEP_M, TRAIL_M = 5.0, 100.0
@@ -77,7 +78,7 @@ def turns(tr):
       dist += hav(tr[j][:2], tr[j + 1][:2]); j += 1
       swing = (tr[j][2] - tr[i][2] + 180) % 360 - 180
       if abs(swing) >= TURN_DEG:
-        out.append(((tr[i][0], tr[i][1]), tr[i][2], swing)); i = j; break
+        out.append(((tr[i][0], tr[i][1]), tr[i][2], swing, (i, j))); i = j; break
     else:
       i += 1; continue
     i += 1
@@ -87,7 +88,7 @@ def turns(tr):
 def place_turns(thinned, tns):
   """Each turn as (distance along the thinned track, fix, approach heading)."""
   placed = []
-  for fix, head, _ in tns:
+  for fix, head, *_ in tns:
     best = min(range(len(thinned)), key=lambda k: hav(fix, thinned[k][:2]), default=None)
     if best is not None and hav(fix, thinned[best][:2]) < MATCH_M:
       placed.append((thinned[best][3], fix, head))
@@ -182,4 +183,5 @@ def main():
   print(f"\ntotal {tot['turns']} turns: predicted {tot['hit']} ({100 * tot['hit'] / t:.0f}%), {tot['alarms']} false alarms{tail}")
 
 
-main()
+if __name__ == "__main__":
+  main()
